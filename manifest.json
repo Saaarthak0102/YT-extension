@@ -8,8 +8,7 @@
   ],
   "host_permissions": [
     "http://localhost:3000/*",
-    "https://*.vercel.app/*",
-    "https://your-backend.example.com/*"
+    "https://*.vercel.app/*"
   ],
   "action": {
     "default_popup": "popup.html",
