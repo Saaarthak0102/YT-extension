@@ -1,4 +1,4 @@
-# 📺 YouTube Playlist Planner
+# PlanYT
 
 A Chrome extension that helps you complete YouTube playlists by generating realistic, day-wise watch schedules with **multiple plan management**.
 
