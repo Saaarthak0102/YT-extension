@@ -32,8 +32,6 @@ const elements = {
   progressBar: document.getElementById('progressBar'),
   progressPercent: document.getElementById('progressPercent'),
   progressLabel: document.getElementById('progressLabel'),
-  progressDay: document.getElementById('progressDay'),
-  progressTotal: document.getElementById('progressTotal'),
   
   // Planner Input
   plannerInputSection: document.getElementById('plannerInputSection'),
@@ -220,13 +218,35 @@ function renderPlansList(plans, activePlanId) {
     title.className = 'plan-item-title';
     title.textContent = plan.title;
     
+    // Calculate progress percentage
+    let completedVideos = 0;
+    let totalVideos = plan.totalVideos || 0;
+    if (plan.planData && Array.isArray(plan.planData)) {
+      plan.planData.forEach(dayData => {
+        if (dayData.completed) {
+          completedVideos += dayData.videos.length;
+        }
+      });
+    }
+    const progressPercent = totalVideos > 0 ? Math.round((completedVideos / totalVideos) * 100) : 0;
+    
     const subtext = document.createElement('div');
     subtext.className = 'plan-item-subtext';
-    const currentDay = calculateCurrentDay(plan);
-    subtext.textContent = `Day ${currentDay} of ${plan.totalDays}`;
+    subtext.textContent = `${progressPercent}% completed`;
+    
+    // Create progress bar
+    const progressBarContainer = document.createElement('div');
+    progressBarContainer.className = 'plan-item-progress-bar';
+    
+    const progressBarFill = document.createElement('div');
+    progressBarFill.className = 'plan-item-progress-fill';
+    progressBarFill.style.width = `${progressPercent}%`;
+    
+    progressBarContainer.appendChild(progressBarFill);
     
     planItem.appendChild(title);
     planItem.appendChild(subtext);
+    planItem.appendChild(progressBarContainer);
     elements.plansList.appendChild(planItem);
   });
 }
@@ -238,6 +258,10 @@ async function handlePlanSelect(planId, plan) {
     appState.isAddingNewPlan = false;
 
     applyPlanToState(plan);
+    
+    // Reload plans list to update active state
+    await loadAndDisplayPlans();
+    
     renderUI();
   } catch (error) {
     showError('Failed to load plan: ' + error.message);
@@ -272,23 +296,9 @@ function updateProgressBar(planId) {
     const totalVideos = appState.playlistData.videoCount || 0;
     const progressPercent = totalVideos > 0 ? Math.round((completedVideos / totalVideos) * 100) : 0;
     
-    // Calculate current day
-    let currentDay = 1;
-    let videoCounter = 0;
-    for (let i = 0; i < appState.plan.length; i++) {
-      const videosInDay = appState.plan[i].videos.length;
-      if (!appState.plan[i].completed) {
-        currentDay = i + 1;
-        break;
-      }
-      videoCounter += videosInDay;
-    }
-    
     // Update UI
     elements.progressBar.style.width = progressPercent + '%';
     elements.progressPercent.textContent = progressPercent + '%';
-    elements.progressDay.textContent = currentDay;
-    elements.progressTotal.textContent = appState.plan.length;
     
     showSection(elements.progressSection);
   } catch (error) {
@@ -521,8 +531,8 @@ function createDayCard(dayData, index) {
     const videoItem = document.createElement('li');
     videoItem.className = 'video-item';
     
-    // Format video display
-    let videoText = `• ${video.title}`;
+    // Format video display (don't add bullet, CSS handles it)
+    let videoText = video.title;
     
     if (video.isPartial) {
       const startTimeStr = video.startTime ? formatMinutes(video.startTime) : '0:00';

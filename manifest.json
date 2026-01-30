@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "YouTube Playlist Watch-Time Planner",
-  "version": "2.0.0",
-  "description": "Plan your YouTube playlist watching schedule with day-wise breakdowns",
+  "name": "PlanYt",
+  "version": "1.0.0",
+  "description": "Your Youtube, planned.",
   "permissions": [
     "storage"
   ],
