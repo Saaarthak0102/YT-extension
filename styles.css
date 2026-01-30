@@ -8,9 +8,9 @@
   --yt-bg-tertiary: #272727;
   --yt-bg-hover: #3f3f3f;
   
-  --yt-text-primary: #f1f1f1;
-  --yt-text-secondary: #aaaaaa;
-  --yt-text-tertiary: #717171;
+  --yt-text-primary: #ffffff;
+  --yt-text-secondary: #e6e6e6;
+  --yt-text-tertiary: #bfbfbf;
   
   --yt-brand-red: #ff0000;
   --yt-brand-red-hover: #cc0000;
@@ -92,7 +92,7 @@ header .subtitle {
    Sections - Minimal Design
    ======================================== */
 .section {
-  margin-bottom: var(--yt-space-lg);
+  margin-bottom: var(--yt-space-md);
   padding: var(--yt-space-lg);
   background-color: var(--yt-bg-secondary);
   border-radius: var(--yt-radius-md);
@@ -101,7 +101,7 @@ header .subtitle {
 
 .section-compact {
   padding: var(--yt-space-md);
-  margin-bottom: var(--yt-space-md);
+  margin-bottom: var(--yt-space-sm);
 }
 
 .section h2 {
@@ -134,8 +134,8 @@ header .subtitle {
 .input-group input {
   width: 100%;
   padding: 10px 12px;
-  background-color: var(--yt-bg-tertiary);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 0, 0, 0.35);
   border-radius: var(--yt-radius-sm);
   color: var(--yt-text-primary);
   font-size: 14px;
@@ -146,7 +146,7 @@ header .subtitle {
 .input-group input:focus {
   outline: none;
   border-color: var(--yt-accent);
-  background-color: var(--yt-bg-secondary);
+  background-color: rgba(255, 255, 255, 0.12);
 }
 
 .input-group input::placeholder {
@@ -206,26 +206,26 @@ header .subtitle {
 }
 
 .btn-secondary {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: var(--yt-text-primary);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--yt-accent);
+  color: #ffffff;
+  border: 1px solid var(--yt-accent);
 }
 
 .btn-secondary:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: var(--yt-accent-hover);
 }
 
 .btn-small {
   width: auto;
   padding: 6px 14px;
   font-size: 12px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(80, 0, 0, 0.45);
   color: var(--yt-text-primary);
   border-radius: var(--yt-radius-full);
 }
 
 .btn-small:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(80, 0, 0, 0.6);
 }
 
 /* ========================================
@@ -290,13 +290,13 @@ header .subtitle {
   display: flex;
   justify-content: space-between;
   padding: var(--yt-space-md);
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(80, 0, 0, 0.004);
   border-radius: var(--yt-radius-sm);
   transition: background-color var(--yt-transition);
 }
 
 .summary-item:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(80, 0, 0, 0.35);
 }
 
 .summary-item .label {
@@ -354,20 +354,20 @@ header .subtitle {
    ======================================== */
 .day-card {
   padding: var(--yt-space-lg);
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(80, 0, 0, 0.2);
   border-radius: var(--yt-radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(80, 0, 0, 0.4);
   transition: all var(--yt-transition);
 }
 
 .day-card:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(80, 0, 0, 0.3);
+  border-color: rgba(80, 0, 0, 0.55);
 }
 
 .day-card.completed {
-  opacity: 0.5;
-  border-color: var(--yt-success);
+  opacity: 0.6;
+  border-color: var(--yt-accent);
 }
 
 .day-header {
@@ -386,7 +386,7 @@ header .subtitle {
 .day-duration {
   font-size: 12px;
   color: var(--yt-text-tertiary);
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(80, 0, 0, 0.5);
   padding: 2px 8px;
   border-radius: var(--yt-radius-sm);
 }
@@ -445,11 +445,11 @@ header .subtitle {
    My Plans Section
    ======================================== */
 .plans-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--yt-text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
+  color: var(--yt-text-primary);
+  text-transform: none;
+  letter-spacing: 0.2px;
   margin-bottom: var(--yt-space-md);
   display: block;
 }
@@ -460,18 +460,23 @@ header .subtitle {
   gap: var(--yt-space-sm);
 }
 
+.plans-footer {
+  margin-top: var(--yt-space-sm);
+  margin-bottom: var(--yt-space-lg);
+}
+
 .plan-item {
   padding: var(--yt-space-md) var(--yt-space-lg);
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(80, 0, 0, 0.2);
+  border: 1px solid rgba(80, 0, 0, 0.4);
   border-radius: var(--yt-radius-md);
   cursor: pointer;
   transition: all var(--yt-transition);
 }
 
 .plan-item:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(80, 0, 0, 0.3);
+  border-color: rgba(80, 0, 0, 0.55);
 }
 
 .plan-item.active {

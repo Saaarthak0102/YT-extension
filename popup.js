@@ -10,8 +10,10 @@ const elements = {
   // Plans Section
   plansSection: document.getElementById('plansSection'),
   plansList: document.getElementById('plansList'),
+  addPlanBtn: document.getElementById('addPlanBtn'),
   
   // Playlist Section
+  playlistSection: document.getElementById('playlistSection'),
   playlistUrlInput: document.getElementById('playlistUrlInput'),
   fetchPlaylistBtn: document.getElementById('fetchPlaylistBtn'),
   
@@ -52,7 +54,10 @@ let appState = {
   videos: [],
   plan: [],
   currentPlanId: null,
-  dailyWatchTime: 0
+  dailyWatchTime: 0,
+  isAddingNewPlan: false,
+  isFetching: false,
+  plansCache: []
 };
 
 // ========================================
@@ -60,40 +65,24 @@ let appState = {
 // ========================================
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('Extension loaded');
-  
-  // Load plans and show them
-  await loadAndDisplayPlans();
-  
-  // Load saved plan if exists
-  const savedPlanData = await getFromStorage('planData');
-  if (savedPlanData) {
-    appState.playlistData = savedPlanData.playlistData;
-    appState.plan = savedPlanData.plan;
-    appState.dailyWatchTime = savedPlanData.dailyWatchTime;
-    
-    // Restore UI state
-    displayPlaylistSummary(appState.playlistData);
-    showSection(elements.plannerInputSection);
-    elements.dailyWatchTimeInput.value = appState.dailyWatchTime;
-    
-    renderPlan(appState.plan);
-    showSection(elements.planSection);
-    
-    // Update progress bar if plan exists
-    if (savedPlanData.plan && savedPlanData.plan.length > 0) {
-      updateProgressBar(appState.currentPlanId);
-    }
-    
-    showMessage('Previous plan restored', 'success');
-  }
-  
   attachEventListeners();
+
+  await loadAndDisplayPlans();
+  await restoreActivePlan();
+  renderUI();
 });
 
 // ========================================
 // Event Listeners
 // ========================================
+let listenersAttached = false;
 function attachEventListeners() {
+  if (listenersAttached) return;
+  listenersAttached = true;
+
+  // Add New Plan
+  elements.addPlanBtn.addEventListener('click', handleAddNewPlan);
+
   // Fetch Playlist
   elements.fetchPlaylistBtn.addEventListener('click', handleFetchPlaylist);
   
@@ -104,28 +93,122 @@ function attachEventListeners() {
   elements.resetBtn.addEventListener('click', handleReset);
 }
 
+function renderUI() {
+  showSection(elements.plansSection);
+
+  if (appState.isAddingNewPlan) {
+    showSection(elements.playlistSection);
+    hideSection(elements.planSection);
+    hideSection(elements.progressSection);
+
+    if (appState.playlistData) {
+      displayPlaylistSummary(appState.playlistData);
+      showSection(elements.plannerInputSection);
+    } else {
+      hideSection(elements.resultsSection);
+      hideSection(elements.plannerInputSection);
+    }
+
+    return;
+  }
+
+  hideSection(elements.playlistSection);
+  hideSection(elements.plannerInputSection);
+
+  if (appState.currentPlanId && appState.plan && appState.plan.length > 0) {
+    displayPlaylistSummary(appState.playlistData);
+    renderPlan(appState.plan);
+    showSection(elements.planSection);
+    updateProgressBar(appState.currentPlanId);
+  } else {
+    hideSection(elements.resultsSection);
+    hideSection(elements.progressSection);
+    hideSection(elements.planSection);
+  }
+}
+
+function applyPlanToState(plan) {
+  appState.playlistData = {
+    id: plan.playlistUrl || '',
+    title: plan.title,
+    videoCount: plan.totalVideos,
+    totalDuration: 0,
+    videos: []
+  };
+  appState.plan = plan.planData || [];
+  appState.dailyWatchTime = plan.dailyMinutes || 0;
+  elements.dailyWatchTimeInput.value = appState.dailyWatchTime || '';
+}
+
+function handleAddNewPlan() {
+  appState.isAddingNewPlan = true;
+  appState.playlistData = null;
+  appState.plan = [];
+  elements.playlistUrlInput.value = '';
+  elements.dailyWatchTimeInput.value = '';
+  hideError();
+  renderUI();
+}
+
 // ========================================
 // Plans Management Functions
 // ========================================
 async function loadAndDisplayPlans() {
   try {
-    const plans = await getAllPlans();
-    appState.currentPlanId = (await getPlansData()).activePlanId;
-    
-    if (plans.length > 0) {
-      renderPlansList(plans, appState.currentPlanId);
-      showSection(elements.plansSection);
-    } else {
-      hideSection(elements.plansSection);
-    }
+    const plansData = await getPlansData();
+    appState.currentPlanId = plansData.activePlanId || null;
+    appState.plansCache = plansData.plans || [];
+
+    renderPlansList(appState.plansCache, appState.currentPlanId);
+    showSection(elements.plansSection);
   } catch (error) {
     console.error('Error loading plans:', error);
-    hideSection(elements.plansSection);
+    appState.plansCache = [];
+    renderPlansList([], null);
+    showSection(elements.plansSection);
+  }
+}
+
+async function restoreActivePlan() {
+  if (appState.currentPlanId) {
+    const activePlan = appState.plansCache.find(plan => plan.id === appState.currentPlanId) || await getActivePlan();
+    if (activePlan) {
+      applyPlanToState(activePlan);
+      return;
+    }
+  }
+
+  const savedPlanData = await getFromStorage('planData');
+  if (savedPlanData && savedPlanData.plan && savedPlanData.plan.length > 0) {
+    appState.playlistData = savedPlanData.playlistData;
+    appState.plan = savedPlanData.plan;
+    appState.dailyWatchTime = savedPlanData.dailyWatchTime;
+    appState.currentPlanId = appState.currentPlanId || 'legacy-plan';
+    appState.plansCache = appState.plansCache.length > 0 ? appState.plansCache : [
+      {
+        id: 'legacy-plan',
+        title: savedPlanData.playlistData?.title || 'Saved Plan',
+        totalVideos: savedPlanData.playlistData?.videoCount || 0,
+        totalDays: savedPlanData.plan.length,
+        dailyMinutes: savedPlanData.dailyWatchTime,
+        progress: { currentDay: 1, lastWatchedIndex: 0 },
+        planData: savedPlanData.plan
+      }
+    ];
+    renderPlansList(appState.plansCache, appState.currentPlanId);
   }
 }
 
 function renderPlansList(plans, activePlanId) {
   elements.plansList.innerHTML = '';
+
+  if (!plans || plans.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'plan-item plan-item-empty';
+    empty.textContent = 'No plans yet. Create one to get started.';
+    elements.plansList.appendChild(empty);
+    return;
+  }
   
   plans.forEach(plan => {
     const planItem = document.createElement('div');
@@ -150,38 +233,12 @@ function renderPlansList(plans, activePlanId) {
 
 async function handlePlanSelect(planId, plan) {
   try {
-    // Set as active
     await setActivePlan(planId);
     appState.currentPlanId = planId;
-    
-    // Update state
-    appState.playlistData = {
-      id: plan.playlistUrl || '',
-      title: plan.title,
-      videoCount: plan.totalVideos,
-      totalDuration: 0, // Not stored, but not needed for display
-      videos: []
-    };
-    appState.plan = plan.planData || [];
-    appState.dailyWatchTime = plan.dailyMinutes;
-    
-    // Display
-    displayPlaylistSummary(appState.playlistData);
-    showSection(elements.plannerInputSection);
-    elements.dailyWatchTimeInput.value = appState.dailyWatchTime;
-    renderPlan(appState.plan);
-    showSection(elements.planSection);
-    
-    // Update progress bar
-    updateProgressBar(planId);
-    
-    // Update plans list UI
-    document.querySelectorAll('.plan-item').forEach(item => {
-      item.classList.remove('active');
-      if (item.dataset.planId === planId) {
-        item.classList.add('active');
-      }
-    });
+    appState.isAddingNewPlan = false;
+
+    applyPlanToState(plan);
+    renderUI();
   } catch (error) {
     showError('Failed to load plan: ' + error.message);
   }
@@ -257,8 +314,11 @@ async function handleFetchPlaylist() {
     showError('Invalid playlist URL. Use format: https://www.youtube.com/playlist?list=...');
     return;
   }
+
+  if (appState.isFetching) return;
   
   try {
+    appState.isFetching = true;
     showLoading(true);
     hideError();
     
@@ -277,18 +337,15 @@ async function handleFetchPlaylist() {
       videos: playlistData.videos
     };
     
-    // Display results
-    displayPlaylistSummary(appState.playlistData);
-    
-    // Show planner input section
-    showSection(elements.plannerInputSection);
-    
+    renderUI();
     showLoading(false);
     
   } catch (error) {
     showLoading(false);
     showError(`Error: ${error.message}`);
     console.error('Fetch error:', error);
+  } finally {
+    appState.isFetching = false;
   }
 }
 
@@ -345,6 +402,9 @@ async function handleGeneratePlan() {
       console.error('Error saving plan to plans system:', planError);
       // Plan is still saved to planData, so continue
     }
+
+    appState.isAddingNewPlan = false;
+    renderUI();
     
   } catch (error) {
     showError(`Error generating plan: ${error.message}`);
