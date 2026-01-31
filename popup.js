@@ -152,11 +152,19 @@ function scrollToFirstIncompleteDay() {
 }
 
 function applyPlanToState(plan) {
+  // Calculate total duration from plan data
+  let totalDuration = 0;
+  if (plan.planData && Array.isArray(plan.planData)) {
+    totalDuration = plan.planData.reduce((sum, day) => {
+      return sum + (day.totalTime || 0);
+    }, 0);
+  }
+  
   appState.playlistData = {
     id: plan.playlistUrl || '',
     title: plan.title,
     videoCount: plan.totalVideos,
-    totalDuration: 0,
+    totalDuration: totalDuration,
     videos: []
   };
   appState.plan = plan.planData || [];
