@@ -105,6 +105,11 @@ No analytics, tracking, or external servers are used.
 
 ---
 
+## Support the project
+If PlanYT helps you stay consistent with YouTube playlists, you can support its development here:
+
+https://github.com/sponsors/Saaaarthak0102
+
 ## Status
 
 Actively developed. Open to feedback and improvements.
